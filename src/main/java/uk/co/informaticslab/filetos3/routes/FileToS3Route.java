@@ -3,6 +3,8 @@ package uk.co.informaticslab.filetos3.routes;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileToS3Route extends RouteBuilder{
 
+    private static final Logger LOG = LoggerFactory.getLogger(FileToS3Route.class);
     private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
     private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
 
@@ -39,6 +42,7 @@ public class FileToS3Route extends RouteBuilder{
     private static String getFromSystemEnvironmentVariables(String environmentVariable) {
         String variable = System.getenv(environmentVariable);
         if(variable == null || variable.equals("")) {
+            LOG.error("No valid environment variable set for {}",environmentVariable);
             throw new RuntimeException(String.format("No valid environment variable set for %s", environmentVariable));
         }
         return variable;
@@ -50,8 +54,8 @@ public class FileToS3Route extends RouteBuilder{
     public void configure() {
         from(getFileComponentConsumerPath())
                 .setHeader("S3Destination", simple(getS3Destination()))
-                .log(LoggingLevel.INFO, "Uploading " + simple("${CamelFileName}") + " to AWS-S3 bucket " + simple("${S3Destination}"))
-                .recipientList(getS3ComponentProducerPath(simple("${S3Destination}").getText()));
+                .log(LoggingLevel.INFO, "Uploading " + simple("${header.CamelFileName}") + " to AWS-S3 bucket " + simple("${header.S3Destination}"))
+                .recipientList(getS3ComponentProducerPath(simple("${header.S3Destination}").getText()));
     }
 
     /**
@@ -66,6 +70,7 @@ public class FileToS3Route extends RouteBuilder{
         sb.append("initialDelay=1000");
         sb.append("&");
         sb.append("delete=true");
+        LOG.debug("File component consumer uri [{}]",sb);
         return sb.toString();
     }
 
@@ -84,6 +89,7 @@ public class FileToS3Route extends RouteBuilder{
         sb.append("&");
         sb.append("secretKey=");
         sb.append(toAWSSecretKey);
+        LOG.debug("S3 component producer uri [{}]",sb);
         return sb.toString();
     }
 
@@ -98,6 +104,7 @@ public class FileToS3Route extends RouteBuilder{
         sb.append(now.year().toString());
         sb.append("/");
         sb.append(now.monthOfYear().toString());
+        LOG.debug("S3 destination [{}] ",sb);
         return sb.toString();
     }
 

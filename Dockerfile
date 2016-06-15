@@ -13,9 +13,12 @@ RUN cd /usr/src/${APP_NAME} && mvn clean install
 RUN mkdir /opt/${APP_NAME}
 WORKDIR /opt/${APP_NAME}
 
+#create data dir where we will mount our volume
+RUN mkdir /data
+
 #set java opts
 ENV HEADLESS_SETTING "-Djava.awt.headless=true"
-ENV MEMORY_SETTINGS "-Xmx2048m -XX:PermSize=64m -XX:MaxPermSize=128m"
+ENV MEMORY_SETTINGS "-Xmx2048m"
 ENV JMX_SETTINGS ""
 
 RUN unzip /usr/src/${APP_NAME}/target/${APP_NAME}-${APP_VERSION}-distribution.zip
