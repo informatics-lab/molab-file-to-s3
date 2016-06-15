@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Route for sending files to AWS-S3.
+ * {@link org.apache.camel.Route} for sending files to AWS-S3.
  */
 @Component
 public class FileToS3Route extends RouteBuilder{
@@ -22,8 +22,8 @@ public class FileToS3Route extends RouteBuilder{
     private final String toAWSSecretKey;
 
     /**
-     * Constructor
-     * Reads in required properties from environment variables and application.properties
+     * Constructor.
+     * Reads in required properties from environment variables and application.properties file.
      * @param fromDirectoryPath directory path to scrape for files
      * @param toS3ParentBucketName parent directory to send data to
      */
