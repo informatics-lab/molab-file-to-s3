@@ -15,6 +15,7 @@ WORKDIR /opt/${APP_NAME}
 
 #create data dir where we will mount our volume
 RUN mkdir /data
+VOLUME ["/data"]
 
 #set java opts
 ENV HEADLESS_SETTING "-Djava.awt.headless=true"
