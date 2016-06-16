@@ -26,9 +26,9 @@ public class Application {
      * A main method to start this application.
      */
     public static void main(String[] args) {
-        logStartingMessages();
         DateTimeZone.setDefault(DateTimeZone.UTC);
         SpringApplication.run(Application.class, args);
+        logStartingMessages();
     }
 
     private static void logStartingMessages() {
