@@ -1,11 +1,11 @@
 package uk.co.informaticslab.filetos3.routes;
 
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import uk.co.informaticslab.filetos3.processors.ErrorFileHousekeepingProcessor;
+import uk.co.informaticslab.filetos3.processors.ErrorDirectoryHousekeepingProcessor;
 
 /**
  * {@link org.apache.camel.Route} for housekeeping the error directory
@@ -14,20 +14,16 @@ public class ErrorDirectoryHousekeepingRoute extends RouteBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ErrorDirectoryHousekeepingRoute.class);
 
-    private final ErrorFileHousekeepingProcessor errorDirectoryHousekeepingProcessor;
-    private final String errorDirectoryPath;
+    private final ErrorDirectoryHousekeepingProcessor errorDirectoryHousekeepingProcessor;
 
     /**
      * Constructor.
-     * Reads in required properties from application.properties file.
      *
-     * @param errorDirectoryPath directory path to poll for files
      * @param errorDirectoryHousekeepingProcessor processor for housekeeping error files
      */
     @Autowired
-    public ErrorDirectoryHousekeepingRoute(@Value("${errorDirectoryPath}") String errorDirectoryPath,
-                                           ErrorFileHousekeepingProcessor errorDirectoryHousekeepingProcessor) {
-        this.errorDirectoryPath = errorDirectoryPath;
+    public ErrorDirectoryHousekeepingRoute(
+            ErrorDirectoryHousekeepingProcessor errorDirectoryHousekeepingProcessor) {
         this.errorDirectoryHousekeepingProcessor = errorDirectoryHousekeepingProcessor;
     }
 
@@ -35,23 +31,21 @@ public class ErrorDirectoryHousekeepingRoute extends RouteBuilder {
      * {@inheritDoc}
      */
     public void configure() {
-        from(getFileComponentConsumerPath())
+        from(getTimerComponentPath())
+                .log(LoggingLevel.INFO, LOG, "Running housekeeping on the error directory")
                 .process(errorDirectoryHousekeepingProcessor);
     }
 
     /**
-     * Gets the Camel File Component path for the consumer endpoint.
-     * @see <a href="http://camel.apache.org/file2.html">Camel File Component Documentation</a>
-     * @return Camel File Component consumer uri
+     * Gets the Camel Timer Component path.
+     * @see <a href="http://camel.apache.org/timer.html">Camel Timer Component Documentation</a>
+     * @return Camel Timer Component uri
      */
-    public String getFileComponentConsumerPath() {
-        StringBuilder sb = new StringBuilder("file://");
-        sb.append(errorDirectoryPath);
+    public String getTimerComponentPath() {
+        StringBuilder sb = new StringBuilder("timer:ErrorDirectoryHousekeeping");
         sb.append("?");
-        sb.append("delay=21600000");
-        sb.append("&");
-        sb.append("include=*/.err");
-        LOG.debug("File component consumer uri [{}]", sb);
+        sb.append("period=21600000");
+        LOG.debug("Timer component uri [{}]", sb);
         return sb.toString();
     }
 

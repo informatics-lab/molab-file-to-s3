@@ -45,9 +45,6 @@ public class FileToS3ErrorProcessor implements Processor {
      */
     public void process(Exchange exchange) {
         Map<String, Object> headers = exchange.getIn().getHeaders();
-        String filename = (String) headers.get("CamelFileName");
-        LOG.warn("File [{}] is being moved to the error directory [{}]", filename, errorDirectoryPath);
-
         writeErrorDetailFile(headers);
     }
 

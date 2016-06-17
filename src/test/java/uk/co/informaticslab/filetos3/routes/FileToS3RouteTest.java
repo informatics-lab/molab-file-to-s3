@@ -93,8 +93,7 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
         assertMockEndpointsSatisfied();
 
 
-        assertEquals("File contents", f, getMockEndpoint(MOCK_UPLOAD_TO_S3_ENDPOINT_URI).getExchanges().get(0).getIn().getBody(GenericFile.class).getFile());
-
+        assertEquals("File contents", f, mockS3Endpoint.getExchanges().get(0).getIn().getBody(GenericFile.class).getFile());
     }
 
     @Test

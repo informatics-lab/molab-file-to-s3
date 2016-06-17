@@ -17,46 +17,59 @@ import java.io.File;
  * {@link Processor} for housekeeping error files
  */
 @Component
-public class ErrorFileHousekeepingProcessor implements Processor {
+public class ErrorDirectoryHousekeepingProcessor implements Processor {
 
     private static final Logger LOG = LoggerFactory.getLogger(ErrorDirectoryHousekeepingRoute.class);
 
     private final Long errorFileExpireAfterMillis;
+    private final File errorDirectory;
 
     /**
      * Constructor.
      * Reads in required properties from application.properties file.
      *
      * @param errorFileExpireAfterMillis millis after which files should be house-kept
+     * @param errorDirectoryPath path of error file directory
      */
     @Autowired
-    public ErrorFileHousekeepingProcessor(@Value("${errorFileExpireAfterMillis}") Long errorFileExpireAfterMillis) {
+    public ErrorDirectoryHousekeepingProcessor(@Value("${errorFileExpireAfterMillis}") Long errorFileExpireAfterMillis,
+                                               @Value("${errorDirectoryPath}") String errorDirectoryPath) {
         this.errorFileExpireAfterMillis = errorFileExpireAfterMillis;
+        this.errorDirectory = new File(errorDirectoryPath);
     }
 
     /**
-     * Asses the {@link DateTime} timestamp of the error file.
-     * If the timestamp is thought to have now expired both the original data file and error file
+     * Asses the {@link DateTime} timestamp of each of the error files.
+     * If the timestamp is thought to have now expired, both the original data file and error file
      * will be removed from the filesystem.
      *
      * @param exchange in-flight {@link Exchange}
      */
     public void process(Exchange exchange) {
-        String filename = exchange.getIn().getHeader("CamelFileName", String.class);
-        String[] filenameParts = filename.split(".");
-        DateTime errorDateTime = Constants.DTF.parseDateTime(filenameParts[filenameParts.length - 2]);
-        DateTime expiryDateTime = errorDateTime.plus(errorFileExpireAfterMillis);
 
-        if (DateTime.now().isAfter(expiryDateTime)) {
-            expireFiles(exchange.getIn().getHeader("CamelFileAbsolutePath", String.class));
+        for (File f : errorDirectory.listFiles()) {
+            if(f.getName().endsWith(".err")) {
+
+                String filename = f.getName();
+                String[] filenameParts = filename.split("\\.");
+                String dt = filenameParts[filenameParts.length - 2];
+                DateTime errorDateTime = Constants.DTF.parseDateTime(dt);
+                DateTime expiryDateTime = errorDateTime.plus(errorFileExpireAfterMillis);
+
+                if (DateTime.now().isAfter(expiryDateTime)) {
+                    expireFiles(f.getAbsolutePath());
+                }
+
+            }
         }
+
     }
 
     private void expireFiles(String absoluteFilePath) {
         String dataFilename = absoluteFilePath.substring(0, absoluteFilePath.length() - 25);
         File dataFile = new File(dataFilename);
         File errorDetailFile = new File(absoluteFilePath);
-        LOG.info("Housekeeping expired files [{},{}]", dataFile.getName(), errorDetailFile.getName());
+        LOG.info("Housekeeping expired files [{}, {}]", dataFile.getName(), errorDetailFile.getName());
         deleteFile(dataFile);
         deleteFile(errorDetailFile);
     }
