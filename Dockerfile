@@ -14,7 +14,7 @@ RUN mkdir /opt/${APP_NAME}
 WORKDIR /opt/${APP_NAME}
 
 #create data dir where we will mount our volume
-RUN mkdir /data
+RUN mkdir /data/incoming && mkdir /data/error
 VOLUME ["/data"]
 
 #set java opts
