@@ -56,7 +56,7 @@ public class FileToS3ErrorProcessor implements Processor {
             String errorDetailFilename = errorDirectoryPath + "/" + filename + "." + dt + ".err";
             LOG.debug("Writing error detail out to [{}]", errorDetailFilename);
             pw = new PrintWriter(new FileWriter(errorDetailFilename));
-            pw.format("Error uploading file [%s] occurred at [%s] ", filename, dt);
+            pw.format("Error uploading file [%s] occurred at [%s]\n", filename, dt);
             for (Map.Entry<String, Object> header : headers.entrySet()) {
                 pw.format("Header [%s] :\n%s\n", header.getKey(), header.getValue());
             }

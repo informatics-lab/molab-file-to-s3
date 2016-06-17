@@ -132,6 +132,8 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
 
         assertMockEndpointsSatisfied();
 
+        System.out.println(mockErrorProcessor.getExchanges().get(0).getIn().getHeaders());
+
         assertEquals("Error data file exists", 1, testErrorDirectory.getRoot().list().length);
 
     }
