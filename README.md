@@ -3,10 +3,13 @@ Sends files from a given directory to a given AWS-S3 bucket
 
 ##Configuration
 Configuration is held in the `src/main/resources/application.properties` file.    
- * `fromDirectoryPath` - the directory from which to read data from.  
+ * `fromDirectoryPath` - the directory from which to read data from.
+ * `errorDirectoryPath` - the directory to move and write error files to.
+ * `errorFileExpireAfterMillis` - the amount of time to keep error files for (currently 10 days = 864000000).
  * `toS3BucketName` - the AWS-S3 bucket to upload data to.  
 
-When data is being transferred the AWS-S3 bucket will automatically have child directories created within it for the current year and month. Final AWS-S3 bucket path will be in the format `parent-bucket-name/YYYY/MMM`. Bucket will be created if it doesn't already exist.
+When data is being transferred the AWS-S3 bucket will automatically have child directories created within it for the current year and month. Final AWS-S3 bucket path will be in the format `parent-bucket-name/YYYY/MMM`. Bucket will be created if it doesn't already exist.  
+If an error occurs whilst uploading a file the upload will be attempted 2 more times, following this if there is still a problem the file will be moved to the `errorDirectoryPath` an error detail file will be created for this file `filename.<DateTime of error (yyyy-MM-ddTHH:mm:ssZ)>.err` this will be stored alongisde the original file in the `errorDirectoryPath`.
 
 ####Important!
 This application requires permission to the AWS-S3 service.  
