@@ -1,9 +1,12 @@
 # molab-file-to-s3
-Sends files from a given directory to a given AWS-S3 bucket
+Uploads files from a given directory to a given AWS-S3 bucket.
+Files should be placed into the `incomingDirectoryPath` where they will be automatically moved into the `processingDirectoryPath` then uploaded to the `toS3BucketName`. 
+
 
 ##Configuration
-Configuration is held in the `src/main/resources/application.properties` file.    
- * `fromDirectoryPath` - the directory from which to read data from.
+Configuration is held in the `src/main/resources/application.properties` file.
+ * `incomingDirectoryPath` - the directory from which to read data from.   
+ * `processingDirectoryPath` - the directory from which to upload data from.
  * `errorDirectoryPath` - the directory to move and write error files to.
  * `errorFileExpireAfterMillis` - the amount of time to keep error files for (currently 10 days = 864000000).
  * `toS3BucketName` - the AWS-S3 bucket to upload data to.  
