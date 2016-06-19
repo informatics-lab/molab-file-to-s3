@@ -7,24 +7,17 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import uk.co.informaticslab.filetos3.processors.FileToS3ErrorProcessor;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Random;
 
-/**
- * Created by tom on 15/06/2016.
- */
-public class FileToS3RouteTest extends CamelSpringTestSupport {
+public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
 
     private static final String MOCK_UPLOAD_TO_S3_ENDPOINT_URI = "mock:s3";
     private static final String MOCK_ERROR_PROCESSOR_URI = "mock:error.processor";
@@ -36,7 +29,7 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
     private static final DateTime MOCK_NOW = new DateTime("2016-01-01T00:00:00Z");
 
     @Rule
-    public TemporaryFolder testFromDirectory = new TemporaryFolder();
+    public TemporaryFolder testProcessingDirectory = new TemporaryFolder();
 
     @Rule
     public TemporaryFolder testErrorDirectory = new TemporaryFolder();
@@ -58,7 +51,7 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
             DateTime.now();
             result = MOCK_NOW;
         }};
-        route = new FileToS3Route(testFromDirectory.getRoot().getAbsolutePath(),
+        route = new FileToS3Route(testProcessingDirectory.getRoot().getAbsolutePath(),
                 testErrorDirectory.getRoot().getAbsolutePath() + "/",
                 TO_BUCKET,
                 processor);
@@ -81,7 +74,7 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
         int contentLength = 20;
         byte[] fileContent = new byte[contentLength];
         new Random().nextBytes(fileContent);
-        File f = writeFileToTestPath(fileContent);
+        File f = writeFileToTemporaryFolder(testProcessingDirectory, fileContent, FILENAME);
 
 
         MockEndpoint mockS3Endpoint = getMockEndpoint(MOCK_UPLOAD_TO_S3_ENDPOINT_URI);
@@ -124,7 +117,7 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
         int contentLength = 20;
         byte[] fileContent = new byte[contentLength];
         new Random().nextBytes(fileContent);
-        File f = writeFileToTestPath(fileContent);
+        File f = writeFileToTemporaryFolder(testProcessingDirectory, fileContent, FILENAME);
 
         mockS3Endpoint.expectedMessageCount(3);
         mockErrorProcessor.expectedMessageCount(1);
@@ -140,7 +133,7 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
 
     public void testFileComponentConsumerPath() throws Exception {
         String actual = route.getFileComponentConsumerPath();
-        String expected = "file://" + testFromDirectory.getRoot().getAbsolutePath() + "?initialDelay=1000&delete=true";
+        String expected = "file://" + testProcessingDirectory.getRoot().getAbsolutePath() + "?initialDelay=1000&delete=true";
         assertEquals("Camel file component consumer paths", expected, actual);
     }
 
@@ -148,17 +141,5 @@ public class FileToS3RouteTest extends CamelSpringTestSupport {
         String actual = route.getS3ComponentProducerPath();
         String expected = "aws-s3://" + TO_BUCKET + "?accessKey=" + MOCK_ACCESS_KEY_ID + "&secretKey=" + MOCK_SECRET_ACCESS_KEY_ID + "&region=eu-west-1";
         assertEquals("Camel AWS-S3 component producer paths", expected, actual);
-    }
-
-    private File writeFileToTestPath(byte[] content) throws Exception {
-        File f = testFromDirectory.newFile(FILENAME);
-        FileOutputStream fos = new FileOutputStream(f);
-        fos.write(content);
-        fos.close();
-        return f;
-    }
-
-    protected AbstractApplicationContext createApplicationContext() {
-        return new ClassPathXmlApplicationContext(getRouteExcludingApplicationContext());
     }
 }

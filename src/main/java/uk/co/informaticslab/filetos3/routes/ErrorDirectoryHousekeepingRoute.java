@@ -32,6 +32,7 @@ public class ErrorDirectoryHousekeepingRoute extends RouteBuilder {
      */
     public void configure() {
         from(getTimerComponentPath())
+                .routeId(this.getClass().getSimpleName())
                 .log(LoggingLevel.INFO, LOG, "Running housekeeping on the error directory")
                 .process(errorDirectoryHousekeepingProcessor);
     }

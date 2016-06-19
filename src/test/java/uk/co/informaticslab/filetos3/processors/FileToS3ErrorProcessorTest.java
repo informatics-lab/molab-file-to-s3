@@ -18,9 +18,6 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by tom on 17/06/2016.
- */
 public class FileToS3ErrorProcessorTest {
 
     private static final DateTime MOCK_NOW = new DateTime("2016-01-01T00:00:00Z");
@@ -58,6 +55,7 @@ public class FileToS3ErrorProcessorTest {
 
         assertEquals("Error detail file exists", true,
                 new File(testErrorDirectory.getRoot().getAbsolutePath()+"/filename.test.2016-01-01T00:00:00Z.err").exists());
+        //TODO assert file contents are as expected
 
     }
 

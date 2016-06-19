@@ -28,7 +28,7 @@ public class FileToS3Route extends RouteBuilder {
     public static final String ERROR_ENDPOINT_PROCESSOR_ID = UUID.randomUUID().toString();
 
     private final FileToS3ErrorProcessor fileToS3ErrorProcessor;
-    private final String fromDirectoryPath;
+    private final String processingDirectoryPath;
     private final String errorDirectoryPath;
     private final String toS3BucketName;
     private final String toAWSAccessKey;
@@ -37,16 +37,16 @@ public class FileToS3Route extends RouteBuilder {
     /**
      * Constructor.
      * Reads in required properties from environment variables and application.properties file.
-     * @param fromDirectoryPath directory path to poll for files
+     * @param processingDirectoryPath directory path to poll for files
      * @param toS3BucketName AWS-S3 bucket to upload data to
      * @param fileToS3ErrorProcessor processor for dealing with failed {@linkplain Exchange}s
      */
     @Autowired
-    public FileToS3Route(@Value("${fromDirectoryPath}") String fromDirectoryPath,
+    public FileToS3Route(@Value("${processingDirectoryPath}") String processingDirectoryPath,
                          @Value("${errorDirectoryPath}") String errorDirectoryPath,
                          @Value("${toS3BucketName}") String toS3BucketName,
                          FileToS3ErrorProcessor fileToS3ErrorProcessor) {
-        this.fromDirectoryPath = fromDirectoryPath;
+        this.processingDirectoryPath = processingDirectoryPath;
         this.errorDirectoryPath = errorDirectoryPath;
         this.toS3BucketName = toS3BucketName;
         this.fileToS3ErrorProcessor = fileToS3ErrorProcessor;
@@ -72,7 +72,6 @@ public class FileToS3Route extends RouteBuilder {
                 .routeId(this.getClass().getSimpleName())
                 .onException(Exception.class)
                     .maximumRedeliveries(2)
-//                    .handled(true)
                     .log(LoggingLevel.WARN, LOG, "File [${header.CamelFileName}] is being moved to the error directory [${header.ErrorDirectory}]")
                     .process(fileToS3ErrorProcessor).id(ERROR_ENDPOINT_PROCESSOR_ID)
                     .to(getFileComponentErrorProducerPath()).id(ERROR_ENDPOINT_ID)
@@ -106,7 +105,7 @@ public class FileToS3Route extends RouteBuilder {
      */
     public String getFileComponentConsumerPath() {
         StringBuilder sb = new StringBuilder("file://");
-        sb.append(fromDirectoryPath);
+        sb.append(processingDirectoryPath);
         sb.append("?");
         sb.append("initialDelay=1000");
         sb.append("&");
