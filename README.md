@@ -21,17 +21,23 @@ The following environment variables must be set for the application to start and
  * `AWS_SECRET_ACCESS_KEY` - your secret access key 
 
 ##Building
-To build the project from source use: `$ mvn clean install`.  
-This will create a zip file containing the built jar `target/molab-file-to-s3-<VERSION>-distribution.zip`.  
+To build the project from source use: `$ mvn clean install -P<PROFILE>`.  
+There are two build profiles to choose from.  
+ * `stand-alone` - builds the app as a stand alone java application   
+ * `docker` - builds to run the app with a docker container   
 
-##Deploying
-`unzip` the .zip file to extract the built jar file.  
+###stand-alone
+This build packages up the jar with an external log configuration and start/stop script as a .zip file.
+After building this can be found at `target/molab-file-to-s3-<VERSION>-distribution.zip`.  
 
-##Running
-Use `$ java -jar molab-file-to-s3.jar` to start the application.  
+####Deployment
+Simply move the .zip file to the location where you wish the app to run and unzip it.
 
-##Docker
-TODO
+####Running
+Use the bundled `molab-file-to-s3.sh` script to start/stop the application.    
+This will create a `./log` directory for the application logs.    
+All logging is configurable by editing the `./logback-core.xml` configuration file.    
 
-
-
+###docker  
+Use the included `Dockerfile` to build and run the application.  
+Ensure environment variables are passed when running the container.   
