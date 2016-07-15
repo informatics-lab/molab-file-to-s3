@@ -15,6 +15,25 @@
             <destName>${project.artifactId}.jar</destName>
         </file>
 
+        <!-- shell script-->
+        <file>
+            <filtered>true</filtered>
+            <source>src/conf/env.stand-alone/app.sh</source>
+            <outputDirectory>/</outputDirectory>
+            <destName>${project.artifactId}.sh</destName>
+            <fileMode>754</fileMode>
+            <lineEnding>unix</lineEnding>
+        </file>
+
+        <!-- logback core -->
+        <file>
+            <filtered>true</filtered>
+            <source>src/conf/env.stand-alone/logback_core.xml</source>
+            <outputDirectory>/</outputDirectory>
+            <destName>logback_core.xml</destName>
+            <fileMode>754</fileMode>
+        </file>
+
     </files>
 
 </assembly>
