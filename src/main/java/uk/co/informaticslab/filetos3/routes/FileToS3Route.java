@@ -76,7 +76,7 @@ public class FileToS3Route extends RouteBuilder {
                     .process(fileToS3ErrorProcessor).id(ERROR_ENDPOINT_PROCESSOR_ID)
                     .to(getFileComponentErrorProducerPath()).id(ERROR_ENDPOINT_ID)
                     .end()
-                .setHeader("CamelAwsS3Key", simple(getDateTimeFileName("${header.CamelFileName}")))
+                .setHeader("CamelAwsS3Key", simple(getS3OptimisedFilename("${header.CamelFileName}")))
                 .setHeader("CamelAwsS3ContentLength", header("CamelFileLength"))
                 .setHeader("S3Bucket", simple(toS3BucketName))
                 .setHeader("ErrorDirectory", simple(errorDirectoryPath))
@@ -136,6 +136,7 @@ public class FileToS3Route extends RouteBuilder {
 
     /**
      * Appends the current year and month as parent directories to the filename.
+     * @param filename current filename
      * @return  date time prepended filename in the format YYYY/MM/filename
      */
     public String getDateTimeFileName(String filename) {
@@ -147,6 +148,21 @@ public class FileToS3Route extends RouteBuilder {
         sb.append("/");
         sb.append(filename);
         LOG.debug("Date time file name [{}] ", sb);
+        return sb.toString();
+    }
+
+    /**
+     * Appends 4 random characters as a directory to the filepath.
+     * @see <a href="https://aws.amazon.com/blogs/aws/amazon-s3-performance-tips-tricks-seattle-hiring-event/">S3 performance optimisation</a>
+     * @param filename current filename
+     * @return random 4 character directory path prepended filename
+     */
+    public String getS3OptimisedFilename(String filename) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(UUID.randomUUID().toString().substring(0,4));
+        sb.append("/");
+        sb.append(filename);
+        LOG.debug("File name [{}] ", sb);
         return sb.toString();
     }
 
