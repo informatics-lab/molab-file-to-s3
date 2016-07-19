@@ -3,6 +3,7 @@ package uk.co.informaticslab.filetos3.routes;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.camel.Exchange;
+import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.file.GenericFile;
@@ -16,6 +17,7 @@ import uk.co.informaticslab.filetos3.processors.FileToS3ErrorProcessor;
 
 import java.io.File;
 import java.util.Random;
+import java.util.UUID;
 
 public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
 
@@ -26,7 +28,8 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
     private static final String FILENAME = "filename.test";
     private static final String MOCK_ACCESS_KEY_ID = "mock-aws-access-key-id";
     private static final String MOCK_SECRET_ACCESS_KEY_ID = "mock-aws-secret-access-key";
-    private static final DateTime MOCK_NOW = new DateTime("2016-01-01T00:00:00Z");
+//    private static final DateTime MOCK_NOW = new DateTime("2016-01-01T00:00:00Z");
+    private static final UUID MOCK_UUID = UUID.randomUUID();
 
     @Rule
     public TemporaryFolder testProcessingDirectory = new TemporaryFolder();
@@ -43,13 +46,11 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
     public void setUp() throws Exception {
         super.setUp();
         context.stop();
-        new Expectations(System.class, DateTime.class) {{
+        new Expectations(System.class) {{
             System.getenv(FileToS3Route.AWS_ACCESS_KEY_ID);
             result = MOCK_ACCESS_KEY_ID;
             System.getenv(FileToS3Route.AWS_SECRET_ACCESS_KEY);
             result = MOCK_SECRET_ACCESS_KEY_ID;
-            DateTime.now();
-            result = MOCK_NOW;
         }};
         route = new FileToS3Route(testProcessingDirectory.getRoot().getAbsolutePath(),
                 testErrorDirectory.getRoot().getAbsolutePath() + "/",
@@ -80,13 +81,13 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
         MockEndpoint mockS3Endpoint = getMockEndpoint(MOCK_UPLOAD_TO_S3_ENDPOINT_URI);
 
         mockS3Endpoint.expectedMessageCount(1);
-        mockS3Endpoint.expectedHeaderReceived("CamelAwsS3Key", "2016/1/" + FILENAME);
         mockS3Endpoint.expectedHeaderReceived("CamelAwsS3ContentLength", contentLength);
 
         assertMockEndpointsSatisfied();
 
-
-        assertEquals("File contents", f, mockS3Endpoint.getExchanges().get(0).getIn().getBody(GenericFile.class).getFile());
+        Message msg = mockS3Endpoint.getExchanges().get(0).getIn();
+        assertTrue(msg.getHeader("CamelAwsS3Key", String.class).contains(FILENAME));
+        assertEquals("File contents", f, msg.getBody(GenericFile.class).getFile());
     }
 
     @Test
@@ -103,7 +104,7 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
 
         MockEndpoint mockS3Endpoint = getMockEndpoint(MOCK_UPLOAD_TO_S3_ENDPOINT_URI);
         MockEndpoint mockErrorProcessor = getMockEndpoint(MOCK_ERROR_PROCESSOR_URI);
-        MockEndpoint mockErrorEndpont = getMockEndpoint(MOCK_ERROR_ENDPOINT_URI);
+        MockEndpoint mockErrorEndpoint = getMockEndpoint(MOCK_ERROR_ENDPOINT_URI);
 
 
         mockS3Endpoint.whenAnyExchangeReceived(new Processor() {
@@ -121,11 +122,9 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
 
         mockS3Endpoint.expectedMessageCount(3);
         mockErrorProcessor.expectedMessageCount(1);
-        mockErrorEndpont.expectedMessageCount(1);
+        mockErrorEndpoint.expectedMessageCount(1);
 
         assertMockEndpointsSatisfied();
-
-        System.out.println(mockErrorProcessor.getExchanges().get(0).getIn().getHeaders());
 
         assertEquals("Error data file exists", 1, testErrorDirectory.getRoot().list().length);
 
