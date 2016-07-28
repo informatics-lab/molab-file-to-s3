@@ -8,16 +8,15 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.co.informaticslab.filetos3.processors.FileToS3ErrorProcessor;
+import uk.co.informaticslab.filetos3.processors.SetOptimisedS3KeyHeaderProcessor;
 
 import java.io.File;
 import java.util.Random;
-import java.util.UUID;
 
 public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
 
@@ -28,8 +27,6 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
     private static final String FILENAME = "filename.test";
     private static final String MOCK_ACCESS_KEY_ID = "mock-aws-access-key-id";
     private static final String MOCK_SECRET_ACCESS_KEY_ID = "mock-aws-secret-access-key";
-//    private static final DateTime MOCK_NOW = new DateTime("2016-01-01T00:00:00Z");
-    private static final UUID MOCK_UUID = UUID.randomUUID();
 
     @Rule
     public TemporaryFolder testProcessingDirectory = new TemporaryFolder();
@@ -40,7 +37,9 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
     private FileToS3Route route;
 
     @Mocked
-    private FileToS3ErrorProcessor processor;
+    private FileToS3ErrorProcessor mockFileToS3ErrorProcessor;
+    @Mocked
+    private SetOptimisedS3KeyHeaderProcessor mockSetOptimisedS3KeyHeaderProcessor;
 
     @Before
     public void setUp() throws Exception {
@@ -55,7 +54,8 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
         route = new FileToS3Route(testProcessingDirectory.getRoot().getAbsolutePath(),
                 testErrorDirectory.getRoot().getAbsolutePath() + "/",
                 TO_BUCKET,
-                processor);
+                mockFileToS3ErrorProcessor,
+                mockSetOptimisedS3KeyHeaderProcessor);
         context.addRoutes(route);
         testFileComponentConsumerPath();
         testS3ComponentProducerPath();
@@ -86,7 +86,6 @@ public class FileToS3RouteTest extends MolabCamelSpringTestSupport {
         assertMockEndpointsSatisfied();
 
         Message msg = mockS3Endpoint.getExchanges().get(0).getIn();
-        assertTrue(msg.getHeader("CamelAwsS3Key", String.class).contains(FILENAME));
         assertEquals("File contents", f, msg.getBody(GenericFile.class).getFile());
     }
 
