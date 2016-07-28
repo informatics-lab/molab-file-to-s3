@@ -3,13 +3,13 @@ package uk.co.informaticslab.filetos3.routes;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.co.informaticslab.filetos3.processors.FileToS3ErrorProcessor;
+import uk.co.informaticslab.filetos3.processors.SetOptimisedS3KeyHeaderProcessor;
 
 import java.util.UUID;
 
@@ -28,6 +28,7 @@ public class FileToS3Route extends RouteBuilder {
     public static final String ERROR_ENDPOINT_PROCESSOR_ID = UUID.randomUUID().toString();
 
     private final FileToS3ErrorProcessor fileToS3ErrorProcessor;
+    private final SetOptimisedS3KeyHeaderProcessor setOptimisedS3KeyHeaderProcessor;
     private final String processingDirectoryPath;
     private final String errorDirectoryPath;
     private final String toS3BucketName;
@@ -37,19 +38,24 @@ public class FileToS3Route extends RouteBuilder {
     /**
      * Constructor.
      * Reads in required properties from environment variables and application.properties file.
+     * Processors autowired in.
      * @param processingDirectoryPath directory path to poll for files
+     * @param errorDirectoryPath directroy path to move erroring files to
      * @param toS3BucketName AWS-S3 bucket to upload data to
      * @param fileToS3ErrorProcessor processor for dealing with failed {@linkplain Exchange}s
+     * @param setOptimisedS3KeyHeaderProcessor processor for setting optimised S3 key
      */
     @Autowired
     public FileToS3Route(@Value("${processingDirectoryPath}") String processingDirectoryPath,
                          @Value("${errorDirectoryPath}") String errorDirectoryPath,
                          @Value("${toS3BucketName}") String toS3BucketName,
-                         FileToS3ErrorProcessor fileToS3ErrorProcessor) {
+                         FileToS3ErrorProcessor fileToS3ErrorProcessor,
+                         SetOptimisedS3KeyHeaderProcessor setOptimisedS3KeyHeaderProcessor) {
         this.processingDirectoryPath = processingDirectoryPath;
         this.errorDirectoryPath = errorDirectoryPath;
         this.toS3BucketName = toS3BucketName;
         this.fileToS3ErrorProcessor = fileToS3ErrorProcessor;
+        this.setOptimisedS3KeyHeaderProcessor = setOptimisedS3KeyHeaderProcessor;
         this.toAWSAccessKey = getFromSystemEnvironmentVariables(AWS_ACCESS_KEY_ID);
         this.toAWSSecretKey = getFromSystemEnvironmentVariables(AWS_SECRET_ACCESS_KEY);
     }
@@ -76,7 +82,7 @@ public class FileToS3Route extends RouteBuilder {
                     .process(fileToS3ErrorProcessor).id(ERROR_ENDPOINT_PROCESSOR_ID)
                     .to(getFileComponentErrorProducerPath()).id(ERROR_ENDPOINT_ID)
                     .end()
-                .setHeader("CamelAwsS3Key", simple(getS3OptimisedFilename("${header.CamelFileName}")))
+                .process(setOptimisedS3KeyHeaderProcessor)
                 .setHeader("CamelAwsS3ContentLength", header("CamelFileLength"))
                 .setHeader("S3Bucket", simple(toS3BucketName))
                 .setHeader("ErrorDirectory", simple(errorDirectoryPath))
@@ -131,38 +137,6 @@ public class FileToS3Route extends RouteBuilder {
         sb.append("&");
         sb.append("region=eu-west-1");
         LOG.debug("S3 component producer uri [{}]", sb);
-        return sb.toString();
-    }
-
-    /**
-     * Appends the current year and month as parent directories to the filename.
-     * @param filename current filename
-     * @return  date time prepended filename in the format YYYY/MM/filename
-     */
-    public String getDateTimeFileName(String filename) {
-        DateTime now = DateTime.now();
-        StringBuilder sb = new StringBuilder();
-        sb.append(now.year().get());
-        sb.append("/");
-        sb.append(now.monthOfYear().get());
-        sb.append("/");
-        sb.append(filename);
-        LOG.debug("Date time file name [{}] ", sb);
-        return sb.toString();
-    }
-
-    /**
-     * Appends 4 random characters as a directory to the filepath.
-     * @see <a href="https://aws.amazon.com/blogs/aws/amazon-s3-performance-tips-tricks-seattle-hiring-event/">S3 performance optimisation</a>
-     * @param filename current filename
-     * @return random 4 character directory path prepended filename
-     */
-    public String getS3OptimisedFilename(String filename) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(UUID.randomUUID().toString().substring(0,4));
-        sb.append("/");
-        sb.append(filename);
-        LOG.debug("File name [{}] ", sb);
         return sb.toString();
     }
 
