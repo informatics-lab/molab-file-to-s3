@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true" scanPeriod="30 seconds">
-    <property name="appname" value="molab-file-to-s3"/>
-    <contextName>${appname}</contextName>
-    <include file="logback_core.xml"/>
-</configuration>
