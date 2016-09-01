@@ -2,6 +2,8 @@
 Uploads files from a given directory to a given AWS-S3 bucket.
 Files should be placed into the `incomingDirectoryPath` where they will be automatically moved into the `processingDirectoryPath` then uploaded to the `toS3BucketName`. 
 
+##Version
+1.1
 
 ##Configuration
 Configuration is held in the `src/main/resources/application.properties` file.
@@ -21,22 +23,11 @@ The following environment variables must be set for the application to start and
  * `AWS_SECRET_ACCESS_KEY` - your secret access key 
 
 ##Building
-To build the project from source use: `$ mvn clean install -P<PROFILE>`.  
-There are two build profiles to choose from.  
- * `stand-alone` - builds the app as a stand alone java application   
- * `docker` - builds to run the app with a docker container   
-
-###stand-alone
-This build packages up the jar with an external log configuration and start/stop script as a .zip file.
-After building this can be found at `target/molab-file-to-s3-<VERSION>-distribution.zip`.  
-
-####Deployment
-Simply move the .zip file to the location where you wish the app to run and unzip it.
+To build the project from source use: `$ mvn clean install`.  
+This build packages up the source code as an executable jar. 
 
 ####Running
-Use the bundled `molab-file-to-s3.sh` script to start/stop the application.    
-This will create a `./log` directory for the application logs.    
-All logging is configurable by editing the `./logback-core.xml` configuration file.    
+See [Spring Boot Start Info](http://docs.spring.io/spring-boot/docs/current/reference/html/deployment-install.html#deployment-initd-service)    
 
 ###docker  
 Use the included `Dockerfile` to build and run the application.  
