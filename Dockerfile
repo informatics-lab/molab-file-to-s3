@@ -1,4 +1,4 @@
-FROM maven:3.3
+FROM jamesdbloom/docker-java8-maven
 MAINTAINER Tom Powell <thomas.powell@informaticslab.co.uk>
 
 ENV APP_NAME "molab-file-to-s3"
@@ -14,6 +14,7 @@ RUN mkdir /opt/${APP_NAME}
 WORKDIR /opt/${APP_NAME}
 
 #create data dir where we will mount our volume
+RUN mkdir /data
 RUN mkdir /data/incoming && mkdir /data/processing && mkdir /data/error
 VOLUME ["/data"]
 
@@ -22,4 +23,7 @@ ENV HEADLESS_SETTING "-Djava.awt.headless=true"
 ENV MEMORY_SETTINGS "-Xmx2048m"
 ENV JMX_SETTINGS ""
 
-CMD java ${MEMORY_SETTINGS} ${HEADLESS_SETTING} ${JMX_SETTINGS} -jar ${APP_NAME}.jar
+RUN cd /usr/src/${APP_NAME}/target/
+RUN ls
+RUN pwd
+CMD java ${MEMORY_SETTINGS} ${HEADLESS_SETTING} ${JMX_SETTINGS} -jar `ls /usr/src/${APP_NAME}/target/${APP_NAME}-*.jar`

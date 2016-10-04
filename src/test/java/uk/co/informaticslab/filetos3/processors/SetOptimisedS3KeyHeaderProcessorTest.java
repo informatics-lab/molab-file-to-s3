@@ -31,8 +31,8 @@ public class SetOptimisedS3KeyHeaderProcessorTest {
         Exchange exchange1 = new DefaultExchange(mockContext);
         Exchange exchange2 = new DefaultExchange(mockContext);
 
-        String fileName1 = "filename1.test";
-        String fileName2 = "filename2.test";
+        String fileName1 = "englaa_pd000_engl_um_000_20160902T0000Z.nc";
+        String fileName2 = "englaa_pd000_engl_um_000_20160903T0000Z.nc";
 
         exchange1.getIn().setHeader("CamelFileName", fileName1);
         exchange2.getIn().setHeader("CamelFileName", fileName2);

@@ -5,6 +5,7 @@ import org.apache.camel.Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import java.util.regex.Pattern;
 
 import java.util.UUID;
 
@@ -18,9 +19,13 @@ public class SetOptimisedS3KeyHeaderProcessor implements Processor {
 
     private static final String CAMEL_FILE_NAME = "CamelFileName";
     private static final String CAMEL_AWS_S3_KEY = "CamelAwsS3Key";
+    private static final Pattern ALLOWED_FILE_REGEX = Pattern.compile("englaa_pd[0-9]*_engl_um_[0-9]*_[0-9]*T0000Z.*");
 
     public void process(Exchange exchange) {
         String fileName = exchange.getIn().getHeader(CAMEL_FILE_NAME, String.class);
+        if(!ALLOWED_FILE_REGEX.matcher(fileName).matches()){
+            throw new RuntimeException("Don't process file: " + fileName);
+        }
         exchange.getIn().setHeader(CAMEL_AWS_S3_KEY, getOptimisedS3Key(fileName));
     }
 
